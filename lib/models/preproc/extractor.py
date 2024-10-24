@@ -29,17 +29,20 @@ class FeatureExtractor(object):
         self.model = hmr2(ckpt).to(device).eval()
     
     def run(self, video, tracking_results, patch_h=256, patch_w=256):
-        
-        if osp.isfile(video):
+        if isinstance(video, str):
+        # if osp.isfile(video):
             cap = cv2.VideoCapture(video)
             is_video = True
             length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             width, height = cap.get(cv2.CAP_PROP_FRAME_WIDTH), cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        else:   # Image list
+        # else:   # Image list
+        elif isinstance(video, list):
             cap = video
             is_video = False
             length = len(video)
             height, width = cv2.imread(video[0]).shape[:2]
+        else:
+            raise ValueError('Invalid input type')
         
         frame_id = 0
         bar = Bar('Feature extraction ...', fill='#', max=length)

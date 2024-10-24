@@ -11,7 +11,7 @@ from multiprocessing import Process, Queue
 from dpvo.utils import Timer
 from dpvo.dpvo import DPVO
 from dpvo.config import cfg
-from dpvo.stream import image_stream, video_stream
+from dpvo.stream import image_stream, video_stream, stream_images  
 
 ROOT_DIR = osp.abspath(f"{__file__}/../../../../")
 DPVO_DIR = osp.join(ROOT_DIR, "third-party/DPVO")
@@ -32,7 +32,8 @@ class SLAMModel(object):
         self.times = []
         self.slam = None
         self.queue = Queue(maxsize=8)
-        self.reader = Process(target=video_stream, args=(self.queue, video, calib, stride, skip))
+        self.reader = Process(target=stream_images, args=(video, calib, skip, stride, self.queue))
+        # self.reader = Process(target=video_stream, args=(self.queue, video, calib, stride, skip))
         self.reader.start()
         
     def estimate_intrinsics(self, width, height, calib):

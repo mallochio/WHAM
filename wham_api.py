@@ -124,7 +124,8 @@ class WHAM_API(object):
 
         # Whether or not estimating motion in global coordinates
         run_global = run_global and _run_global
-        if run_global: self.slam = SLAMModel(video, output_dir, width, height, calib)
+        if run_global: 
+            self.slam = SLAMModel(video, output_dir, width, height, calib)
         
         # preprocessing to get detection, tracking, slam results and image features from video input
         tracking_results, slam_results = self.preprocessing(video, cap, fps, length, output_dir)
@@ -143,5 +144,6 @@ class WHAM_API(object):
 if __name__ == '__main__':
     #from wham_api import WHAM_API
     wham_model = WHAM_API()
-    input_video_path = 'examples/IMG_9732.mov'
-    results, tracking_results, slam_results = wham_model(input_video_path)
+    input_video_path = 'examples/IMG_9730.mov'
+    # input_video_path = "/home/sid/Projects/dataset/test/"
+    results, tracking_results, slam_results = wham_model(input_video_path, run_global=True, visualize=True)

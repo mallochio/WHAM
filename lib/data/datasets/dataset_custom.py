@@ -48,7 +48,7 @@ class CustomDataset(torch.utils.data.Dataset):
         self.fps = fps
         self.res = torch.tensor([width, height]).float()
         self.intrinsics = compute_cam_intrinsics(self.res)
-        
+        self.prefix = ''
         self.device = cfg.DEVICE.lower()
         
         self.smpl = build_body_model('cpu')
