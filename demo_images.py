@@ -188,13 +188,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--image_dir', type=str,
-                        default='examples/test',
+                        # default='examples/test',
+                        default="/home/NAS-mountpoint/kinect-omni-ego/2024-01-12/at-unis/lab/sid/capture0/rgb",
                         help='input image directory path')
 
-    parser.add_argument('--output_pth', type=str, default='output/demo',
+    parser.add_argument('--output_pth', type=str, 
+                        # default='output/demo',
+                        default="output/demo/2024-01-12_at-unis_lab_sid_capture0",
                         help='output folder to write results')
 
-    parser.add_argument('--calib', type=str, default=None,
+    parser.add_argument('--calib', type=str, 
+                        default="/home/sid/Projects/WHAM/examples/k0_calib.txt",
                         help='Camera calibration file path')
 
     parser.add_argument('--estimate_local_only', action='store_true',
