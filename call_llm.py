@@ -16,7 +16,7 @@ GROQ_ENDPOINT = "https://api.groq.com/openai/v1"
 GROQ_MODEL = "llama-3.2-90b-vision-preview"
 
 MISTRAL_ENDPOINT = "https://api.mistral.ai/v1/"
-MISTRAL_MODEL = "pixtral-12b-2409"
+MISTRAL_MODEL = "pixtral-large-latest"
 
 QUERY = """
 This is a photo captured from a ceiling mounted omnidirectional camera with a fisheye lens. \
@@ -35,9 +35,25 @@ IMG_DIR = "/home/NAS-mountpoint/kinect-omni-ego/2022-09-29/at-a02/kitchen/a03/om
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
+    
+def overlay_mask(image_path, mask_path, output_dir=None):
+    # Overlay the mask on the image and optionally saves
+    img = cv2.imread(image_path)
+    mask = cv2.imread(mask_path)
+    if mask is not None and img is not None:
+        mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
+        alpha = 0.5
+        overlay = cv2.addWeighted(img, 1, mask, alpha, 0)
+        if output_dir is not None:
+            output_path = os.path.join(output_dir, os.path.basename(image_path))
+            cv2.imwrite(output_path, overlay)
+    return overlay
 
 
 def make_overlay(image_dir=IMG_DIR, mask_dir=MASK_DIR):
+    """
+    Takes in directories containing masks and images and calls function that overlays the masks on the images and saves
+    """
     # Get the list of images
     images = os.listdir(image_dir)
     output_dir = os.path.join(os.path.dirname(mask_dir), "out_composite")
@@ -45,18 +61,8 @@ def make_overlay(image_dir=IMG_DIR, mask_dir=MASK_DIR):
         image_path = os.path.join(image_dir, image)
         mask_path = os.path.join(mask_dir, image)
         if not os.path.exists(mask_path):
-            print(image_path)
             continue
-
-        img = cv2.imread(image_path)
-        mask = cv2.imread(mask_path)
-        if mask is not None and img is not None:
-            mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
-            
-            alpha = 0.5
-            overlay = cv2.addWeighted(img, 1, mask, alpha, 0)
-            output_path = os.path.join(output_dir, os.path.basename(image_path))
-            cv2.imwrite(output_path, overlay)
+        overlay_mask(image_path, mask_path, output_dir=output_dir)
 
 
 def call_api(api_key, image_path, query=QUERY):
@@ -101,5 +107,5 @@ if __name__ == "__main__":
     parser.add_argument("--image_path", required=True, help="Path to the image file")
     parser.add_argument("--query", required=False, help="Query to ask the model")
     args = parser.parse_args()
-    # main(args)
-    make_overlay()
+    main(args)
+    # make_overlay()
