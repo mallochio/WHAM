@@ -2,11 +2,8 @@ import os
 import base64
 import argparse
 
-from matplotlib.pyplot import legend
-from matplotlib.quiver import QuiverKey
 from openai import OpenAI
 import cv2
-import numpy as np
 from tqdm import tqdm
 
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/openai/"
@@ -19,12 +16,14 @@ MISTRAL_ENDPOINT = "https://api.mistral.ai/v1/"
 MISTRAL_MODEL = "pixtral-large-latest"
 
 QUERY = """
-This is a photo captured from a ceiling mounted omnidirectional camera with a fisheye lens. \
-I have also overlaid a segmentation mask of a person on top of the image, \
-so any persons in the image are supposed to have masks overlaid on them. \
-If a person is missing a mask, reply with a single word - NO. \
-If no persons are missed - reply YES \
-Do not output any other text, only YES or NO.\
+Analyze this overhead fisheye camera image with person segmentation masks:
+- The image is from a ceiling-mounted omnidirectional camera
+- Person segmentation masks are overlaid in semi-transparent color
+- Task: Check if ALL persons in the image have corresponding masks
+- Response format: 
+    * Return 'YES' if every person has a mask
+    * Return 'NO' if any person is missing a mask
+- Strictly respond with only 'YES' or 'NO', no other text
 """
 
 MASK_DIR = "/home/NAS-mountpoint/kinect-omni-ego/2022-09-29/at-a02/kitchen/a03/omni_masks/out_mask"
@@ -50,7 +49,7 @@ def overlay_mask(image_path, mask_path, output_dir=None):
     return overlay
 
 
-def make_overlay(image_dir=IMG_DIR, mask_dir=MASK_DIR):
+def make_overlays(image_dir=IMG_DIR, mask_dir=MASK_DIR):
     """
     Takes in directories containing masks and images and calls function that overlays the masks on the images and saves
     """
@@ -96,16 +95,28 @@ def call_api(api_key, image_path, query=QUERY):
         # stream=False,
         # stop=None
     ) 
-    print(response.choices[0].message.content)
+    response = response.choices[0].message.content
+    if response == "NO":
+        print(image_path)
+
+
+def loop_over_dir(args, image_dir=IMG_DIR, mask_dir=MASK_DIR):
+    api_key = args.api_key
+    for i in tqdm(os.listdir(image_dir)):
+        image_path = os.path.join(image_dir, i)
+        mask_path = os.path.join(mask_dir, i)
+        if not os.path.exists(mask_path):
+            call_api(api_key, image_path)
 
 def main(args):
+    loop_over_dir(args)
     call_api(args.api_key, args.image_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="API call example")
     parser.add_argument("--api_key", required=True, help="Your API key")
-    parser.add_argument("--image_path", required=True, help="Path to the image file")
+    parser.add_argument("--image_path", help="Path to the image file", default="/home/NAS-mountpoint/kinect-omni-ego/2022-09-29/at-a02/kitchen/a03/omni_masks/out_composite/1664459293715.jpg")
     parser.add_argument("--query", required=False, help="Query to ask the model")
     args = parser.parse_args()
     main(args)
-    # make_overlay()
+    # make_overlays()
