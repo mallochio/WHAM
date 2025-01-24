@@ -96,17 +96,20 @@ def call_api(api_key, image_path, query=QUERY):
         # stop=None
     ) 
     response = response.choices[0].message.content
-    if response == "NO":
-        print(image_path)
+    return response
 
 
 def loop_over_dir(args, image_dir=IMG_DIR, mask_dir=MASK_DIR):
     api_key = args.api_key
+    False_negatives = []
     for i in tqdm(os.listdir(image_dir)):
         image_path = os.path.join(image_dir, i)
         mask_path = os.path.join(mask_dir, i)
         if not os.path.exists(mask_path):
-            call_api(api_key, image_path)
+            response = call_api(api_key, image_path)
+            if response == "NO":
+                False_negatives.append(image_path)
+    print(f"False negatives: {False_negatives}")
 
 def main(args):
     loop_over_dir(args)
